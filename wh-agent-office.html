@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<title>W&H Agent Office</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --wh-brand: #265374;
+  --wh-dark-bg: #08152b;
+  --wh-warm-white: #fff7ea;
+  --wh-mid-blue: #4488aa;
+  --wh-light-blue: #6ca7c9;
+  --wh-mist: #aabdc9;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--wh-dark-bg);
+  color: var(--wh-warm-white);
+  overflow: hidden;
+}
+.view { position: fixed; inset: 0; }
+.hidden { display: none; }
+
+.hud {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 20px; z-index: 30; pointer-events: none;
+}
+.hud > * { pointer-events: auto; }
+.hud-title {
+  font-weight: 700; font-size: 16px;
+  background: rgba(8,21,43,0.6); backdrop-filter: blur(4px);
+  padding: 8px 16px; border-radius: 20px;
+  border: 1px solid rgba(170,189,201,0.25);
+}
+.hud-title span { color: var(--wh-light-blue); font-weight: 500; font-size: 12px; display: block; }
+.hud-hint {
+  background: rgba(8,21,43,0.6); backdrop-filter: blur(4px);
+  padding: 8px 16px; border-radius: 20px;
+  border: 1px solid rgba(170,189,201,0.25);
+  font-size: 12px; color: var(--wh-mist);
+}
+.back-btn {
+  background: var(--wh-brand); color: var(--wh-warm-white);
+  border: none; padding: 8px 16px; border-radius: 20px;
+  font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 12px;
+  cursor: pointer;
+}
+.back-btn:hover { background: var(--wh-mid-blue); }
+
+/* ============ BUILDING VIEW ============ */
+#buildingView {
+  background: radial-gradient(ellipse at 50% 0%, #163a5c 0%, #08152b 60%);
+}
+.sky-star {
+  position: absolute; width: 2px; height: 2px;
+  background: var(--wh-warm-white); border-radius: 50%;
+  opacity: 0.5; animation: twinkle 3s infinite ease-in-out;
+}
+@keyframes twinkle { 50% { opacity: 0.1; } }
+
+.building {
+  position: absolute;
+  bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 380px;
+}
+.building-cap {
+  height: 14px;
+  background: var(--wh-mist);
+  border-radius: 4px 4px 0 0;
+  margin: 0 8px;
+}
+.floor {
+  position: relative;
+  height: 92px;
+  margin: 3px 0;
+  border-radius: 4px;
+  display: flex; align-items: center;
+  padding: 0 20px;
+  cursor: default;
+  transition: transform 0.15s ease;
+}
+.floor.locked {
+  background: linear-gradient(180deg, #14243b, #0d1a2e);
+  border: 1px solid rgba(170,189,201,0.12);
+}
+.floor.hq-floor { border: 1px solid rgba(232,201,61,0.25); }
+.floor.hq-floor .floor-name { color: #e8c93d; }
+.floor.active {
+  background: linear-gradient(180deg, #2a5a80, #1e4468);
+  border: 1px solid var(--wh-light-blue);
+  cursor: pointer;
+}
+.floor.active:hover { transform: scale(1.02); }
+.floor-windows {
+  display: flex; gap: 8px; flex: 1;
+}
+.floor-window {
+  width: 20px; height: 30px;
+  border-radius: 3px;
+}
+.floor.locked .floor-window { background: rgba(170,189,201,0.08); }
+.floor.active .floor-window { background: #e8c93d; box-shadow: 0 0 10px 2px rgba(232,201,61,0.4); }
+.floor-window.dim { background: rgba(255,247,234,0.15) !important; box-shadow: none !important; }
+.floor-info {
+  text-align: right;
+  min-width: 130px;
+}
+.floor-name { font-weight: 700; font-size: 14px; }
+.floor.locked .floor-name { color: var(--wh-mist); }
+.floor-sub { font-size: 10px; color: var(--wh-mist); margin-top: 2px; }
+.floor.active .floor-sub { color: var(--wh-warm-white); font-weight: 600; }
+.lock-icon { font-size: 11px; opacity: 0.5; }
+
+.building-base {
+  height: 20px;
+  background: var(--wh-mist);
+  border-radius: 0 0 4px 4px;
+  margin: 0 4px;
+}
+.ground-line {
+  position: absolute;
+  bottom: -30px; left: 50%; transform: translateX(-50%);
+  width: 130%; height: 60px;
+  background: radial-gradient(ellipse at center, rgba(255,247,234,0.08) 0%, transparent 70%);
+}
+
+.building-title {
+  position: absolute;
+  top: 90px; left: 50%; transform: translateX(-50%);
+  text-align: center;
+}
+.building-title h1 { font-size: 22px; font-weight: 700; }
+.building-title p { font-size: 12px; color: var(--wh-mist); margin-top: 4px; }
+
+/* ============ OFFICE INTERIOR VIEW ============ */
+#officeView {
+  background: linear-gradient(180deg, #0f2038 0%, #16324f 55%, #1c3f5e 100%);
+}
+.window-wall {
+  position: absolute;
+  top: 60px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 24px;
+}
+.city-window {
+  width: 90px; height: 260px;
+  background: linear-gradient(180deg, #1a3a5c, #0d2038);
+  border: 3px solid rgba(255,247,234,0.15);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+.city-light {
+  position: absolute;
+  width: 6px; height: 8px;
+  background: #e8c93d;
+  opacity: 0.7;
+}
+
+.office-floor {
+  position: absolute;
+  bottom: -40px; left: 50%; transform: translateX(-50%);
+  width: 140%; height: 260px;
+  background: linear-gradient(180deg, #2a4a68 0%, #1c3450 100%);
+  border-radius: 50% 50% 0 0 / 20% 20% 0 0;
+}
+.floor-plank {
+  position: absolute;
+  bottom: 0; height: 1px;
+  width: 100%;
+  background: rgba(255,247,234,0.06);
+}
+
+.ceiling-light {
+  position: absolute;
+  top: 20px;
+  width: 100px; height: 6px;
+  background: var(--wh-warm-white);
+  border-radius: 3px;
+  box-shadow: 0 0 20px 4px rgba(255,247,234,0.3);
+  opacity: 0.7;
+}
+
+.desk {
+  position: absolute;
+  width: 74px; height: 34px;
+  background: var(--wh-brand);
+  border-radius: 6px;
+  border: 2px solid #1a3a56;
+  z-index: 3;
+}
+.desk::before {
+  content: '';
+  position: absolute;
+  top: -16px; left: 50%; transform: translateX(-50%);
+  width: 30px; height: 18px;
+  background: #0d1a2e;
+  border-radius: 3px;
+  border: 2px solid var(--wh-mist);
+}
+.desk::after {
+  content: '';
+  position: absolute;
+  top: -12px; left: 50%; transform: translateX(-50%);
+  width: 24px; height: 10px;
+  background: var(--wh-light-blue);
+  border-radius: 2px;
+  opacity: 0.8;
+}
+.desk.manager { background: var(--wh-mid-blue); width: 90px; height: 38px; }
+
+.plant {
+  position: absolute;
+  width: 26px; z-index: 3;
+}
+.plant .pot {
+  width: 26px; height: 20px;
+  background: #6b4a3a;
+  border-radius: 3px 3px 6px 6px;
+  margin: 0 auto;
+}
+.plant .leaves {
+  width: 34px; height: 34px;
+  background: #5a8a63;
+  border-radius: 50% 50% 40% 40%;
+  margin: 0 auto -6px;
+}
+
+.critter-wrap {
+  position: absolute; z-index: 5; cursor: pointer;
+  text-align: center; animation: bob 2.6s ease-in-out infinite;
+}
+@keyframes bob { 0%,100% { transform: translateY(0) translateX(-50%); } 50% { transform: translateY(-6px) translateX(-50%); } }
+.critter-wrap:hover .critter { transform: scale(1.08); }
+.critter { transition: transform 0.15s ease; }
+
+.penguin .body {
+  width: 46px; height: 54px; background: var(--wh-dark-bg);
+  border: 2.5px solid var(--wh-warm-white);
+  border-radius: 45% 45% 50% 50% / 55% 55% 45% 45%;
+  margin: 0 auto; position: relative;
+}
+.penguin .belly {
+  width: 26px; height: 34px; background: var(--wh-warm-white);
+  border-radius: 50%; position: absolute; bottom: 4px; left: 50%;
+  transform: translateX(-50%);
+}
+.penguin .beak {
+  width: 0; height: 0; border-left: 4px solid transparent;
+  border-right: 4px solid transparent; border-top: 6px solid #e8a33d;
+  position: absolute; top: 9px; left: 50%; transform: translateX(-50%) rotate(90deg);
+}
+.penguin .eye { width: 3.5px; height: 3.5px; background: var(--wh-dark-bg); border-radius: 50%; position: absolute; top: 10px; }
+.penguin .eye.l { left: 14px; } .penguin .eye.r { right: 14px; }
+
+.puffle .body {
+  width: 46px; height: 46px; background: var(--wh-light-blue);
+  border-radius: 50%; border: 2px solid var(--wh-warm-white); position: relative;
+}
+.puffle .eye { width: 4px; height: 4px; background: var(--wh-dark-bg); border-radius: 50%; position: absolute; top: 17px; }
+.puffle .eye.l { left: 14px; } .puffle .eye.r { right: 14px; }
+.puffle .cheek { width: 7px; height: 4px; background: rgba(38,83,116,0.4); border-radius: 50%; position: absolute; top: 23px; }
+.puffle .cheek.l { left: 6px; } .puffle .cheek.r { right: 6px; }
+.puffle.duke .body { background: var(--wh-mid-blue); }
+.puffle.nest .body { background: #e8a33d; }
+.puffle.radar .body { background: #7a9e7e; }
+
+.status-dot {
+  width: 11px; height: 11px; border-radius: 50%;
+  position: absolute; top: -3px; right: -1px;
+  border: 2px solid var(--wh-dark-bg); z-index: 2;
+}
+.status-dot.working { background: #e8c93d; animation: pulse 1.4s infinite; }
+.status-dot.done { background: #6ca87e; }
+.status-dot.waiting { background: var(--wh-mist); }
+.status-dot.flag { background: #d9764a; }
+@keyframes pulse { 0%,100% { opacity:1; transform:scale(1);} 50%{opacity:.5; transform:scale(1.3);} }
+
+.nameplate {
+  margin-top: 6px; font-size: 11px; font-weight: 700;
+  background: rgba(8,21,43,0.75); padding: 2px 9px; border-radius: 10px;
+  display: inline-block; border: 1px solid rgba(170,189,201,0.3);
+}
+.bubble {
+  position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+  background: var(--wh-warm-white); color: var(--wh-dark-bg);
+  font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 8px;
+  white-space: nowrap; opacity: 0; animation: bubbleshow 4s ease-in-out infinite;
+}
+@keyframes bubbleshow { 0%,70%,100% {opacity:0;} 80%,90% {opacity:1;} }
+
+.overlay {
+  position: fixed; inset: 0; background: rgba(8,21,43,0.55);
+  display: none; align-items: center; justify-content: center; z-index: 50;
+}
+.overlay.show { display: flex; }
+.card {
+  background: var(--wh-dark-bg); border: 1px solid var(--wh-brand);
+  border-radius: 16px; padding: 28px 26px 22px; width: 300px;
+  text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); position: relative;
+}
+.card .close {
+  position: absolute; top: 10px; right: 14px; cursor: pointer;
+  color: var(--wh-mist); font-size: 16px; background: none; border: none;
+}
+.card .critter { margin: 0 auto 8px; position: relative; width: fit-content; }
+.card-name { font-size: 20px; font-weight: 700; margin-top: 4px; }
+.card-role { font-size: 12px; color: var(--wh-light-blue); font-weight: 600; margin-bottom: 12px; }
+.card-status { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 12px; border-radius: 20px; margin-bottom: 14px; }
+.card-status.working { background: rgba(232,201,61,0.15); color: #e8c93d; }
+.card-status.done { background: rgba(108,168,126,0.15); color: #6ca87e; }
+.card-status.waiting { background: rgba(170,189,201,0.12); color: var(--wh-mist); }
+.card-note { font-size: 13px; color: var(--wh-mist); line-height: 1.5; text-align: left; border-top: 1px solid rgba(170,189,201,0.2); padding-top: 14px; }
+
+.notice {
+  position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+  font-size: 11px; color: var(--wh-mist);
+  background: rgba(8,21,43,0.7); padding: 6px 14px; border-radius: 20px; z-index: 20;
+}
+.toast {
+  position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+  background: var(--wh-dark-bg); border: 1px solid var(--wh-mist);
+  padding: 8px 16px; border-radius: 20px; font-size: 12px;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 40;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ============ BUILDING VIEW ============ -->
+<div class="view" id="buildingView">
+  <div class="hud">
+    <div class="hud-title">W&H Agent Office <span>Every department, one building</span></div>
+    <div class="hud-hint">Click a lit floor to walk in</div>
+  </div>
+  <div id="starsLayer"></div>
+
+  <div class="building-title">
+    <h1>Wait &amp; Hope Foundation</h1>
+    <p>Higher floors get built as more departments come online</p>
+  </div>
+
+  <div class="building">
+    <div class="building-cap"></div>
+    <div class="floor locked hq-floor" data-locked="true">
+      <div class="floor-windows">
+        <div class="floor-window dim"></div><div class="floor-window dim"></div><div class="floor-window dim"></div>
+      </div>
+      <div class="floor-info"><div class="floor-name">👑 Marketing HQ</div><div class="floor-sub"><span class="lock-icon">🔒</span> builds once 2+ departments exist</div></div>
+    </div>
+    <div class="floor locked" data-locked="true">
+      <div class="floor-windows">
+        <div class="floor-window dim"></div><div class="floor-window dim"></div><div class="floor-window dim"></div>
+      </div>
+      <div class="floor-info"><div class="floor-name">PR</div><div class="floor-sub"><span class="lock-icon">🔒</span> coming soon</div></div>
+    </div>
+    <div class="floor locked" data-locked="true">
+      <div class="floor-windows">
+        <div class="floor-window dim"></div><div class="floor-window dim"></div><div class="floor-window dim"></div>
+      </div>
+      <div class="floor-info"><div class="floor-name">Content</div><div class="floor-sub"><span class="lock-icon">🔒</span> coming soon</div></div>
+    </div>
+    <div class="floor locked" data-locked="true">
+      <div class="floor-windows">
+        <div class="floor-window dim"></div><div class="floor-window dim"></div><div class="floor-window dim"></div>
+      </div>
+      <div class="floor-info"><div class="floor-name">Meta Ads</div><div class="floor-sub"><span class="lock-icon">🔒</span> coming soon</div></div>
+    </div>
+    <div class="floor locked" data-locked="true">
+      <div class="floor-windows">
+        <div class="floor-window dim"></div><div class="floor-window dim"></div><div class="floor-window dim"></div>
+      </div>
+      <div class="floor-info"><div class="floor-name">Social &amp; Buffer</div><div class="floor-sub"><span class="lock-icon">🔒</span> coming soon</div></div>
+    </div>
+    <div class="floor active" id="adsFloor">
+      <div class="floor-windows">
+        <div class="floor-window"></div><div class="floor-window"></div><div class="floor-window"></div>
+      </div>
+      <div class="floor-info"><div class="floor-name">Google Ads</div><div class="floor-sub">6 agents · click to enter</div></div>
+    </div>
+    <div class="building-base"></div>
+  </div>
+  <div class="ground-line"></div>
+</div>
+
+<!-- ============ OFFICE INTERIOR VIEW ============ -->
+<div class="view hidden" id="officeView">
+  <div class="hud">
+    <div class="hud-title">Google Ads Floor <span>Carl's team</span></div>
+    <button class="back-btn" onclick="showBuilding()">← Back to building</button>
+  </div>
+
+  <div class="window-wall" id="windowWall"></div>
+  <div class="ceiling-light" style="left:20%"></div>
+  <div class="ceiling-light" style="left:50%; transform:translateX(-50%);"></div>
+  <div class="ceiling-light" style="left:80%"></div>
+
+  <div id="officeFloor" class="office-floor"></div>
+
+  <div class="notice">Sample statuses shown — ask to wire this up to real agent runs for live data.</div>
+</div>
+
+<div class="overlay" id="overlay"><div class="card" id="card"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const agents = [
+  { id:'carl', name:'Carl', role:'Strategist', type:'penguin',
+    status:'done', x:'50%', y:120, desk:'manager',
+    note:"Weekly check: clean. One item closed after review." },
+  { id:'chip', name:'Chip', role:'Performance', type:'puffle', cls:'',
+    status:'done', x:'18%', y:60, desk:'normal',
+    note:'Spend on pace. Campaign too new for period comparison — monitoring.' },
+  { id:'duke', name:'Duke', role:'Compliance', type:'puffle', cls:'duke',
+    status:'done', x:'34%', y:60, desk:'normal',
+    note:'All Ad Grants gates clear this check.' },
+  { id:'scout', name:'Scout', role:'Keywords', type:'puffle', cls:'',
+    status:'waiting', x:'66%', y:60, desk:'normal',
+    note:'Next run: monthly cadence. No findings yet.' },
+  { id:'radar', name:'Radar', role:'Trends', type:'puffle', cls:'radar',
+    status:'waiting', x:'82%', y:60, desk:'normal',
+    note:'Next run: monthly cadence. No findings yet.' },
+  { id:'nest', name:'Nest', role:'Site research', type:'puffle', cls:'nest',
+    status:'waiting', x:'50%', y:15, desk:'normal',
+    note:'Cross-department. Called on request when designing new campaigns.' }
+];
+
+function critterHTML(a){
+  const inner = a.type === 'penguin'
+    ? `<div class="body"><div class="belly"></div><div class="beak"></div><div class="eye l"></div><div class="eye r"></div></div>`
+    : `<div class="body"><div class="eye l"></div><div class="eye r"></div><div class="cheek l"></div><div class="cheek r"></div></div>`;
+  return `<div class="critter ${a.type} ${a.cls||''}">${inner}<div class="status-dot ${a.status}"></div></div>`;
+}
+
+/* --- building view setup --- */
+const starsLayer = document.getElementById('starsLayer');
+for (let i=0;i<50;i++){
+  const s=document.createElement('div');
+  s.className='sky-star';
+  s.style.position='fixed';
+  s.style.left=Math.random()*100+'%';
+  s.style.top=Math.random()*60+'%';
+  s.style.animationDelay=(Math.random()*3)+'s';
+  starsLayer.appendChild(s);
+}
+document.querySelectorAll('.floor.locked').forEach(f=>{
+  f.addEventListener('click', ()=>showToast("This floor hasn't been built yet"));
+});
+document.getElementById('adsFloor').addEventListener('click', showOffice);
+
+/* --- office view setup --- */
+const officeFloor = document.getElementById('officeFloor');
+const windowWall = document.getElementById('windowWall');
+
+for (let w=0; w<4; w++){
+  const win=document.createElement('div');
+  win.className='city-window';
+  windowWall.appendChild(win);
+  for (let l=0; l<10; l++){
+    if (Math.random() > 0.5){
+      const light=document.createElement('div');
+      light.className='city-light';
+      light.style.left = (10 + Math.random()*70) + '%';
+      light.style.top = (10 + Math.random()*80) + '%';
+      win.appendChild(light);
+    }
+  }
+}
+
+// plants
+[['4%', 40], ['94%', 40]].forEach(p=>{
+  const plant=document.createElement('div');
+  plant.className='plant';
+  plant.style.left=p[0];
+  plant.style.bottom=p[1]+'px';
+  plant.innerHTML='<div class="leaves"></div><div class="pot"></div>';
+  officeFloor.appendChild(plant);
+});
+
+agents.forEach((a,i)=>{
+  // desk under each puffle (skip carl's whiteboard-style area, give manager desk)
+  const desk=document.createElement('div');
+  desk.className='desk' + (a.desk==='manager' ? ' manager' : '');
+  desk.style.left=a.x;
+  desk.style.bottom=(a.y-6)+'px';
+  desk.style.transform='translateX(-50%)';
+  officeFloor.appendChild(desk);
+
+  const wrap=document.createElement('div');
+  wrap.className='critter-wrap';
+  wrap.style.left=a.x;
+  wrap.style.bottom=(a.y+26)+'px';
+  wrap.style.animationDelay=(i*0.3)+'s';
+  wrap.innerHTML = critterHTML(a) +
+    (a.status==='working' ? `<div class="bubble">working…</div>` : '') +
+    `<div class="nameplate">${a.name}</div>`;
+  wrap.onclick=()=>openCard(a);
+  officeFloor.appendChild(wrap);
+});
+
+function showOffice(){
+  document.getElementById('buildingView').classList.add('hidden');
+  document.getElementById('officeView').classList.remove('hidden');
+}
+function showBuilding(){
+  document.getElementById('officeView').classList.add('hidden');
+  document.getElementById('buildingView').classList.remove('hidden');
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+function openCard(a){
+  const card=document.getElementById('card');
+  card.innerHTML = `
+    <button class="close" onclick="closeCard()">✕</button>
+    ${critterHTML(a)}
+    <div class="card-name">${a.name}</div>
+    <div class="card-role">${a.role}</div>
+    <div class="card-status ${a.status}">${a.status}</div>
+    <div class="card-note">${a.note}</div>
+  `;
+  document.getElementById('overlay').classList.add('show');
+}
+function closeCard(){ document.getElementById('overlay').classList.remove('show'); }
+document.getElementById('overlay').addEventListener('click', e=>{
+  if(e.target.id==='overlay') closeCard();
+});
+</script>
+</body>
+</html>
